@@ -1,37 +1,20 @@
 ---
 appName: userService
-logLevel: WARN
 
 routes:
-  admin:
-    url: /admin
-    template: admin.html
-    assets:
-        templates: /templates
-        static: /static
-  dashboard:
-    url: /dashboard
-    template: dashboard.html
-    assets:
-        templates: /templates
-        static: /static
-  account:
-    url: /account
-    template: account.html
-    assets:
-        templates: /templates
-        static: /static
+  insert:
+    url: '/userService/insertUser'
+  get:
+    url: '/userService/getUser'
 
-databases:
-  cassandra:
-    host: example.cassandra.db
-    username: user
-    password: password
-  redshift:
-    jdbcURL: jdbc:redshift://<IP>:<PORT>/file?user=username&password=pass
-    tempS3Dir: s3://path/to/redshift/temp/dir/
-  redis:
-    host: hostname
-    port: port-number
-    auth: authentication
-    db: database
+database:
+  mongodb:
+    host: 'localhost'
+    port: '27017'
+    db: users
+
+
+logger:
+  filename: 'tmp/info.log'
+  level: INFO
+  propogate: no
