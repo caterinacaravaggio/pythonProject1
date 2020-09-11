@@ -1,0 +1,37 @@
+---
+appName: userService
+logLevel: WARN
+
+routes:
+  admin:
+    url: /admin
+    template: admin.html
+    assets:
+        templates: /templates
+        static: /static
+  dashboard:
+    url: /dashboard
+    template: dashboard.html
+    assets:
+        templates: /templates
+        static: /static
+  account:
+    url: /account
+    template: account.html
+    assets:
+        templates: /templates
+        static: /static
+
+databases:
+  cassandra:
+    host: example.cassandra.db
+    username: user
+    password: password
+  redshift:
+    jdbcURL: jdbc:redshift://<IP>:<PORT>/file?user=username&password=pass
+    tempS3Dir: s3://path/to/redshift/temp/dir/
+  redis:
+    host: hostname
+    port: port-number
+    auth: authentication
+    db: database
