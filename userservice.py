@@ -1,4 +1,4 @@
-from flask import Flask, request, json, jsonify
+from flask import Flask, request,  jsonify
 from markupsafe import escape
 from pymongo import MongoClient
 import logging
@@ -30,36 +30,51 @@ with client:
 def validate_json(jsonData):
     result = "user has been saved"
     try:
-        jsonData['userName']
+        username = jsonData['userName']
     except (KeyError, ValueError) as err:
         logging.error(err.args[0] + " in json file")
         result = err.args[0] + " in json file"
+        username = 'error'
         pass
     try:
-        jsonData['name']
+        name = jsonData['name']
     except (KeyError, ValueError) as err:
         logging.error(err.args[0] + " in json file")
         result = err.args[0] + " in json file"
+        name = 'error'
         pass
     try:
-        jsonData['surname']
+        surname = jsonData['surname']
     except (KeyError, ValueError) as err:
         logging.error(err.args[0] + " in json file")
         result = err.args[0] + " in json file"
+        surname = 'error'
         pass
     try:
         age = int(jsonData['age'])
     except (KeyError, ValueError) as err:
         logging.error(err.args[0] + " in json file")
         result = err.args[0] + " in json file"
-        age = -1
+        age = 1
         pass
 
     if (age <= 0):
         logging.error("incorrect age")
         result = "incorrect age"
         pass
-    logging.info("Row inserted successfully")
+
+
+    if not username:
+        result = "void field username"
+
+    if not name:
+        result = "void field name"
+
+    if not surname:
+        result = "void field surname"
+
+
+    logging.info("Row ready to be inserted")
 
     return result
 
@@ -88,7 +103,7 @@ def insertUser(request):
             message = jsonify(code=code1, defaultMessage=ok)
         else:
             message = jsonify(code=code1, defaultMessage=ok , userName=request['userName'],
-                   name=request['name'], surname=request['surname'], age=request['age'])
+                              name=request['name'], surname=request['surname'], age=request['age'])
 
     return message
 
@@ -100,20 +115,24 @@ def getUserDetails(userName):
     logging.info("Request for find user")
     code1 = 1
     # retrive value from db assuming only one value
-    with client:
-        findUser = list(db.userDetails.find({'userName': userName}, {'_id': 0}))
-        # print(findUser)
-        if not findUser:
-            logging.error("Failed find: no matching")
-            code1 = -1
-            ok = "Failed find: no matching"
-        else:
-            logging.info("Row present in DB")
-            ok = "user has been found"
-        if code1 < 0:
-            message = message = jsonify(code=code1, defaultMessage=ok)
-        else:
-            message = jsonify(code=code1, defaultMessage=ok , users=findUser)
+    if not userName:
+        ok = "Error : Invalid request"
+        code = -1
+    else:
+        with client:
+            findUser = list(db.userDetails.find({'userName': userName}, {'_id': 0}))
+            # print(findUser)
+            if not findUser:
+                logging.error("Failed find: no matching")
+                code1 = -1
+                ok = "Failed find: no matching"
+            else:
+                logging.info("Row present in DB")
+                ok = "user has been found"
+    if code1 < 0:
+        message = jsonify(code=code1, defaultMessage=ok)
+    else:
+        message = jsonify(code=code1, defaultMessage=ok , users=findUser)
 
     return message
 

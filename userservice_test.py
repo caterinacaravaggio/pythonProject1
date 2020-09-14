@@ -1,6 +1,9 @@
 import unittest
+from flask import json, request, jsonify
+
 import userservice
-import json
+
+
 
 class UserServiceTest(unittest.TestCase):
     def test_validate_json(self):
@@ -9,7 +12,7 @@ class UserServiceTest(unittest.TestCase):
         """
         json_string = {'userName': 'user11', 'age': 10, 'name': 'name3', 'surname': 'surname3'}
         result = userservice.validate_json(json_string)
-        self.assertEqual(result , "ok" )
+        self.assertEqual(result , "user has been saved" )
 
     def test_validate_json_wrong_username(self):
         """
@@ -43,6 +46,14 @@ class UserServiceTest(unittest.TestCase):
         result = userservice.validate_json(json_string)
         self.assertEqual(result, "name in json file")
 
+    def test_validate_json_void_name(self):
+        """
+        Test JSON correctness with misspelled name
+        """
+        json_string = {'userName': 'user11', 'age': 10, 'name' : '', 'surname': 'surname3'}
+        result = userservice.validate_json(json_string)
+        self.assertEqual(result, "void field name")
+
     def test_validate_json_wrong_surname(self):
         """
         Test JSON correctness with misspelled surname
@@ -71,43 +82,62 @@ class UserServiceTest(unittest.TestCase):
         """
         Test insert user
         """
-        json_string = {'userName': 'user11', 'age': 10, 'name': 'name3', 'surname': 'surname3'}
-        result = userservice.insertUser(json_string)
-        equals_to = '{ "code" : 1, "defalutMessage" : "user has been inserted", ' \
-                      + str(json_string) + ' }'
-
-        self.assertEqual(result, json.dumps(equals_to))
+        with userservice.app.test_client() as c:
+            rv = c.post('/userService/insertUser', json={
+                'userName': 'user11',
+                'age': 10,
+                'name': 'name3',
+                'surname': 'surname3'
+            })
+            json_data = rv.get_json()
+            self.assertEqual(json_data, {
+                'code' : 1,
+                'defaultMessage' : 'user has been saved',
+                'userName': 'user11',
+                'age': 10,
+                'name': 'name3',
+                'surname': 'surname3'
+            })
 
     def test_insert_user_wrong_username(self):
         """
         Test insert user with misspelled username
         """
-        json_string = {'userame': 'user1', 'age': 10, 'name': 'name3', 'surname': 'surname3'}
-        result = userservice.insertUser(json_string)
-        equals_to = '{ \"code\" : -2, \"defalutMessage\" : userName in json file}'
-
-        self.assertEqual(result, json.dumps(equals_to))
+        with userservice.app.test_client() as c:
+            rv = c.post('/userService/insertUser', json={
+                'userNam': 'user11',
+                'age': 10,
+                'name': 'name3',
+                'surname': 'surname3'
+            })
+            json_data = rv.get_json()
+            self.assertEqual(json_data, {
+                'code': -2,
+                'defaultMessage': 'userName in json file'
+            })
 
     def test_get_user_details(self):
         """
         Test get user
         """
-        json_string = {'userName': 'user1', 'age': 10, 'name': 'name3', 'surname': 'surname3'}
-        userservice.insertUser(json_string)
-        user = 'user1'
-        result = userservice.getUserDetails(user)
-        equals_to = "{'userName': 'user1', 'age': 10, 'name': 'name3', 'surname': 'surname3'}"
-        print(json.loads(result))
-        self.assertTrue(equals_to in json.loads(result))
+        with userservice.app.test_client() as c:
+            rv = c.get('/userService/getUser?userName=user11')
+            json_data = rv.get_json()
+            print(str(json_data))
+            self.assertTrue(
+                "'code': 1, 'defaultMessage': 'user has been found'" in str(json_data))
 
     def test_get_user_details_not_present(self):
         """
         Test get user
         """
-        user = "use"
-        result = userservice.getUserDetails(user)
-        equals_to = '{ \"code\" : -1, \"defalutMessage\" : Failed find: no matching}'
-        self.assertEqual(result, json.dumps(equals_to))
+        with userservice.app.test_client() as c:
+            rv = c.get('/userService/getUser?userName=userNotPresent')
+            json_data = rv.get_json()
+            self.assertEqual(json_data, {
+                'code': -1,
+                'defaultMessage': 'Failed find: no matching'
+            })
 
 
 
