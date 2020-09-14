@@ -1,7 +1,6 @@
-from flask import Flask, request
+from flask import Flask, request, json, jsonify
 from markupsafe import escape
 from pymongo import MongoClient
-import json
 import logging
 import yaml
 
@@ -29,7 +28,7 @@ with client:
 
 # json validation
 def validate_json(jsonData):
-    result = "ok"
+    result = "user has been saved"
     try:
         jsonData['userName']
     except (KeyError, ValueError) as err:
@@ -53,7 +52,7 @@ def validate_json(jsonData):
     except (KeyError, ValueError) as err:
         logging.error(err.args[0] + " in json file")
         result = err.args[0] + " in json file"
-        age = 1
+        age = -1
         pass
 
     if (age <= 0):
@@ -68,29 +67,30 @@ def validate_json(jsonData):
 # create core functions
 def insertUser(request):
     logging.info("Request for insert user")
-    code = 1
+    code1 = 1
     # insert in db
     with client:
         # validate request
         ok = validate_json(request)
-        if (ok != "ok"):
-            code = -2
+        if (ok != "user has been saved"):
+            code1 = -2
             logging.error("Not valid insert: " + ok)
         logging.info("Starting insert")
         try:
             db.userDetails.insert(request)
         except Exception as err:
             logging.error("Failed insert" + err.args[0])
-            code = -2
+            code1 = -2
             ok = "Failed insert" + err.args[0]
             pass
         # create json string to return
-        if code < 0:
-            message = '{ "code" : ' + str(code) + ', "defalutMessage" : ' + ok + '}'
+        if code1 < 0:
+            message = jsonify(code=code1, defaultMessage=ok)
         else:
-            message = '{ "code" : ' + str(code) + ', "defalutMessage" : "user has been inserted", ' \
-                      + str(request) + ' }'
-    return json.dumps(message)
+            message = jsonify(code=code1, defaultMessage=ok , userName=request['userName'],
+                   name=request['name'], surname=request['surname'], age=request['age'])
+
+    return message
 
 
 # look at api with json
@@ -98,25 +98,24 @@ def insertUser(request):
 
 def getUserDetails(userName):
     logging.info("Request for find user")
-    code = 1
+    code1 = 1
     # retrive value from db assuming only one value
     with client:
         findUser = list(db.userDetails.find({'userName': userName}, {'_id': 0}))
         # print(findUser)
         if not findUser:
             logging.error("Failed find: no matching")
-            code = -1
+            code1 = -1
             ok = "Failed find: no matching"
         else:
             logging.info("Row present in DB")
-        if code < 0:
-            message = '{ "code" : ' + str(code) + ', "defalutMessage" : ' + ok + '}'
+            ok = "user has been found"
+        if code1 < 0:
+            message = message = jsonify(code=code1, defaultMessage=ok)
         else:
-            message = '{ "code" : ' + str(code) + ', "defalutMessage" : "user has been found", ' + '\n'.join(
-                str(elem) for elem in findUser) + '}'
-        jsonResult = json.dumps(message)
+            message = jsonify(code=code1, defaultMessage=ok , users=findUser)
 
-    return jsonResult
+    return message
 
 
 @app.route(config['routes']['insert']['url'], methods=['GET', 'POST'])
