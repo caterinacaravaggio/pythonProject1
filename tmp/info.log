@@ -1,0 +1,5 @@
+INFO:root:Program started
+INFO:root:Connected to DB
+INFO:root:Current UserDetails 
+
+INFO:werkzeug: * Running on http://127.0.0.1:9000/ (Press CTRL+C to quit)

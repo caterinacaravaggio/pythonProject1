@@ -6,7 +6,7 @@ import yaml
 
 app = Flask(__name__)
 
-with open("app.conf.yaml", 'r') as stream:
+with open('app.conf.yaml', 'r') as stream:
     try:
         config = yaml.safe_load(stream)
     except yaml.YAMLError as err:
